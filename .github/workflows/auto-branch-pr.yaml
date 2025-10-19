@@ -1,0 +1,40 @@
+name: Auto Branch and PR from Issue
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  create_branch_pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create branch from issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          REPO: ${{ github.repository }}
+        run: |
+          BRANCH_NAME="issue-${ISSUE_NUMBER}-$(echo "$ISSUE_TITLE" | tr ' ' '-' | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]-')"
+          echo "Creating branch: $BRANCH_NAME"
+
+          # Create branch from main
+          gh api repos/$REPO/git/refs \
+            -f ref="refs/heads/$BRANCH_NAME" \
+            -f sha=$(gh api repos/$REPO/git/ref/heads/main --jq .object.sha)
+
+          # Create pull request
+          gh pr create \
+            --repo "$REPO" \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --title "WIP: $ISSUE_TITLE" \
+            --body "Automatically created for issue #$ISSUE_NUMBER"
+
