@@ -3,6 +3,7 @@ name: Auto Branch and PR from Issue
 on:
   issues:
     types: [opened]
+    
 
 jobs:
   create_branch_pr:
