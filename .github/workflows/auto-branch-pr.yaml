@@ -15,9 +15,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create branch from issue
+      - name: Authenticate GitHub CLI
+        run: echo "${{ secrets.GH_PAT }}" | gh auth login --with-token
+
+      - name: Create branch and PR
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           REPO: ${{ github.repository }}
@@ -37,4 +39,3 @@ jobs:
             --head "$BRANCH_NAME" \
             --title "WIP: $ISSUE_TITLE" \
             --body "Automatically created for issue #$ISSUE_NUMBER"
-
